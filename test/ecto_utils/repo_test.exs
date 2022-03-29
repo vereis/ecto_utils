@@ -20,6 +20,32 @@ defmodule EctoUtils.RepoTest do
     end
   end
 
+  describe "__using__/1" do
+    defmodule Repo do
+      use Ecto.Repo,
+        otp_app: :ecto_utils,
+        adapter: Etso.Adapter
+
+      use EctoUtils.Repo
+    end
+
+    defmodule VanillaRepo do
+      use Ecto.Repo,
+        otp_app: :ecto_utils,
+        adapter: Etso.Adapter
+    end
+
+    for {function, arity} <- [is_schema: 1, list_preloads: 1] do
+      test "`#{function}/#{arity}` is injected into Repo" do
+        assert function_exported?(Repo, unquote(function), unquote(arity))
+      end
+
+      test "`#{function}/#{arity}` is not exported in vanilla Repo" do
+        refute function_exported?(VanillaRepo, unquote(function), unquote(arity))
+      end
+    end
+  end
+
   describe "list_preloads/1" do
     test "returns empty list given schema with no associations" do
       assert [] = Repo.list_preloads(%Cucumber{})

@@ -4,6 +4,39 @@ defmodule EctoUtils.Repo do
   """
 
   @doc """
+  Allows you to execute any `EctoUtils.Repo` function in the module that `use`-es this
+  macro.
+
+  This is useful for centralizing Repo functions in your app's own repo module, rather
+  than you needing to manually call `EctoUtils.Repo` functions yourself.
+
+  Usage:
+
+  ```elixir
+  defmodule MyApp.Repo do
+    use Ecto.Repo, ...
+    use EctoUtils.Repo
+  end
+
+  MyApp.Repo.is_schema(Date.utc_today())
+  > false
+  ```
+  """
+  defmacro __using__(_opts) do
+    repo = __MODULE__
+    functions = repo.__info__(:functions)
+
+    for {function, arity} <- functions do
+      arguments = Macro.generate_arguments(arity, __MODULE__)
+
+      quote do
+        defdelegate unquote(function)(unquote_splicing(arguments)),
+          to: unquote(repo)
+      end
+    end
+  end
+
+  @doc """
   Returns true if the given paramter is an Elixir module that `use`-es `Ecto.Schema`
   or is a struct derived from a module that `use`-es `Ecto.Schema`
   """
