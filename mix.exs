@@ -33,6 +33,7 @@ defmodule EctoUtils.MixProject do
 
       # Test dependencies
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
+      {:etso, "~> 0.1.2", only: :test},
 
       # Misc dependencies
       {:ex_doc, "~> 0.14", only: :dev, runtime: false}
