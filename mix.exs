@@ -11,6 +11,7 @@ defmodule EctoUtils.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       package: package(),
+      description: description(),
       dialyzer: [
         plt_file: {:no_warn, "priv/plts/dialyzer.plt"}
       ]
@@ -42,6 +43,12 @@ defmodule EctoUtils.MixProject do
 
   defp aliases do
     [lint: ["format --check-formatted --dry-run", "credo --strict", "dialyzer"]]
+  end
+
+  defp description() do
+    """
+    Collection of various Ecto related utilities I tend to re-implement on every project I work on.
+    """
   end
 
   defp package() do
