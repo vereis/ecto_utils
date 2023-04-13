@@ -3,7 +3,7 @@ let
 in
 pkgs.mkShell {
   buildInputs = [
-    pkgs.elixir_1_10
+    pkgs.elixir_1_12
     pkgs.inotify-tools
   ];
 }
