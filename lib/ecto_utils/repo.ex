@@ -26,13 +26,49 @@ defmodule EctoUtils.Repo do
     repo = __MODULE__
     functions = repo.__info__(:functions)
 
-    for {function, arity} <- functions do
-      arguments = Macro.generate_arguments(arity, __MODULE__)
+    delegates =
+      for {function, arity} <- functions do
+        arguments = Macro.generate_arguments(arity, __MODULE__)
 
-      quote do
-        defdelegate unquote(function)(unquote_splicing(arguments)),
-          to: unquote(repo)
+        quote do
+          defdelegate unquote(function)(unquote_splicing(arguments)),
+            to: unquote(repo)
+        end
       end
+
+    [
+      quote do
+        @doc """
+        Executes the given closure in a transaction; returning its returns, but ensuring that the transaction
+        was rolled back in the process.
+        """
+        @spec dry_run(closure :: (() -> term())) :: {:ok, term()} | {:error, term()}
+        def dry_run(closure), do: dry_run(unquote(repo), closure)
+      end
+      | delegates
+    ]
+  end
+
+  @doc """
+  Executes the given closure in a transaction; returning its returns, but ensuring that the transaction
+  was rolled back in the process.
+  """
+  @spec dry_run(repo :: module(), closure :: (() -> term())) :: {:ok, term()} | {:error, term()}
+  def dry_run(repo, closure) when is_atom(repo) and is_function(closure, 0) do
+    ref = make_ref()
+
+    case repo.transaction(fn -> repo.rollback({ref, closure.()}) end) do
+      {:error, {^ref, result}} ->
+        {:ok, result}
+
+      {:error, reason} ->
+        {:error, reason}
+
+      {:ok, unexpected_response} ->
+        {:error, unexpected_response}
+
+      unexpected_response ->
+        {:error, unexpected_response}
     end
   end
 
