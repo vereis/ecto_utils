@@ -35,7 +35,7 @@ defmodule EctoUtils.RepoTest do
         adapter: Etso.Adapter
     end
 
-    for {function, arity} <- [is_schema: 1, list_preloads: 1] do
+    for {function, arity} <- [schema?: 1, preloads: 1] do
       test "`#{function}/#{arity}` is injected into Repo" do
         assert function_exported?(Repo, unquote(function), unquote(arity))
       end
@@ -46,13 +46,13 @@ defmodule EctoUtils.RepoTest do
     end
   end
 
-  describe "list_preloads/1" do
+  describe "preloads/1" do
     test "returns empty list given schema with no associations" do
-      assert [] = Repo.list_preloads(%Cucumber{})
+      assert [] = Repo.preloads(%Cucumber{})
     end
 
     test "returns empty list given schema with associations, but nothing preloaded" do
-      assert [] = Repo.list_preloads(%Jar{})
+      assert [] = Repo.preloads(%Jar{})
     end
 
     test "returns list of potentially nested preloaded fields on given schema" do
@@ -69,37 +69,37 @@ defmodule EctoUtils.RepoTest do
       }
 
       assert [parent_jar: [:cucumbers, parent_jar: [:cucumbers, parent_jar: [:cucumbers]]]] =
-               Repo.list_preloads(jar)
+               Repo.preloads(jar)
     end
 
     test "raises when given anything that isn't a struct from a module that `use`-es `Ecto.Schema`" do
-      assert_raise ArgumentError, fn -> Repo.list_preloads(Date.utc_today()) end
+      assert_raise ArgumentError, fn -> Repo.preloads(Date.utc_today()) end
     end
   end
 
-  describe "is_schema/1" do
+  describe "schema?/1" do
     test "returns true if given module that `use`-es `Ecto.Schema`" do
-      assert Repo.is_schema(Cucumber)
+      assert Repo.schema?(Cucumber)
     end
 
     test "returns true if given struct of module that `use`-es `Ecto.Schema`" do
-      assert Repo.is_schema(%Cucumber{})
+      assert Repo.schema?(%Cucumber{})
     end
 
     test "returns false if given random atom" do
-      refute Repo.is_schema(:atom)
+      refute Repo.schema?(:atom)
     end
 
     test "returns false if given module that does not `use` `Ecto.Schema`" do
-      refute Repo.is_schema(Date)
+      refute Repo.schema?(Date)
     end
 
     test "returns false if given struct of module that does not `use` `Ecto.Schema`" do
-      refute Repo.is_schema(Date.utc_today())
+      refute Repo.schema?(Date.utc_today())
     end
 
     test "raises given anything else" do
-      assert_raise FunctionClauseError, fn -> Repo.is_schema("test") end
+      assert_raise FunctionClauseError, fn -> Repo.schema?("test") end
     end
   end
 end

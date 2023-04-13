@@ -18,7 +18,7 @@ defmodule EctoUtils.Repo do
     use EctoUtils.Repo
   end
 
-  MyApp.Repo.is_schema(Date.utc_today())
+  MyApp.Repo.schema?(Date.utc_today())
   > false
   ```
   """
@@ -40,13 +40,13 @@ defmodule EctoUtils.Repo do
   Returns true if the given paramter is an Elixir module that `use`-es `Ecto.Schema`
   or is a struct derived from a module that `use`-es `Ecto.Schema`
   """
-  @spec is_schema(module() | struct()) :: boolean()
-  def is_schema(module) when is_atom(module) do
+  @spec schema?(module() | struct()) :: boolean()
+  def schema?(module) when is_atom(module) do
     function_exported?(module, :__schema__, 2)
   end
 
-  def is_schema(%module{} = _struct) do
-    is_schema(module)
+  def schema?(%module{} = _struct) do
+    schema?(module)
   end
 
   @doc """
@@ -58,24 +58,24 @@ defmodule EctoUtils.Repo do
 
   ```elixir
   user = %MyApp.User{orgs: [...]}
-  preloads = MyApp.Repo.list_preloads(user)
+  preloads = MyApp.Repo.preloads(user)
 
   user
   |> MyApp.Repo.reload()
   |> MyApp.Repo.preload(preloads)
   ```
   """
-  @spec list_preloads(struct()) :: [atom()]
-  def list_preloads(%module{} = record) do
-    unless is_schema(module) do
+  @spec preloads(struct()) :: [atom()]
+  def preloads(%module{} = record) do
+    unless schema?(module) do
       raise ArgumentError,
         message: "Expected an Ecto schema struct, given: `%#{inspect(module)}{}`"
     end
 
-    do_list_preloads(record)
+    do_preloads(record)
   end
 
-  defp do_list_preloads(%schema{} = record) when schema != Ecto.Association.NotLoaded do
+  defp do_preloads(%schema{} = record) when schema != Ecto.Association.NotLoaded do
     associations = schema.__schema__(:associations)
 
     record
@@ -83,7 +83,7 @@ defmodule EctoUtils.Repo do
     |> Enum.flat_map(fn {field, value} ->
       if not match?(%{__struct__: Ecto.Association.NotLoaded}, value) and field in associations do
         value
-        |> do_list_preloads()
+        |> do_preloads()
         |> case do
           [] ->
             [field]
@@ -97,5 +97,5 @@ defmodule EctoUtils.Repo do
     end)
   end
 
-  defp do_list_preloads(_value), do: []
+  defp do_preloads(_value), do: []
 end
