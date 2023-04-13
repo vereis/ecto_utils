@@ -148,4 +148,29 @@ defmodule EctoUtils.Schema do
         word <> "s"
     end
   end
+
+  @doc """
+  Ecto sanitizes inputs passed in via attrs such that trying to cast a field to `nil` will
+  be determined to be a no-op and will silently fail.
+
+  This function lets you explicitly mark fields where `nil` casts are valid, and will perform
+  them for you.
+
+  Use as follows:
+  ```elixir
+  def changeset(%MyApp.User{} = struct, attrs) do
+    struct
+    |> cast([:is_deleted])
+    |> mark_nilable(params, :is_deleted)
+  end
+
+  # When called as `changeset(%MyApp.User{is_deleted: true}, %{is_deleted: nil}})`, will return
+  # a changeset containing the `is_deleted: nil` change, where without using this function,
+  # no change would be detected.
+  ```
+  """
+  @spec mark_nilable(Ecto.Changeset.t(), params :: map(), field :: atom()) :: Ecto.Changeset.t()
+  def mark_nilable(%Ecto.Changeset{} = changeset, params, field) do
+    (params[field] in [0, nil] && Ecto.Changeset.force_change(changeset, field, nil)) || changeset
+  end
 end
