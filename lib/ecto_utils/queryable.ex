@@ -14,7 +14,15 @@ defmodule EctoUtils.Queryable do
 
       @impl unquote(__MODULE__)
       def base_query, do: from(x in __MODULE__, as: :self)
-      defoverridable(base_query: 0)
+
+      @impl unquote(__MODULE__)
+      def query(base_query \\ base_query(), filters) do
+        Enum.reduce(filters, base_query, fn {key, value}, query ->
+          unquote(__MODULE__).apply_filter(query, key, value)
+        end)
+      end
+
+      defoverridable base_query: 0, query: 2
     end
   end
 
