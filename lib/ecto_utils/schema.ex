@@ -25,7 +25,7 @@ defmodule EctoUtils.Schema do
   defmacro __using__(opts) do
     repo = Keyword.get(opts, :repo)
 
-    unless is_atom(repo) do
+    unless match?({:__aliases__, _, _}, repo) or is_atom(repo) do
       raise ArgumentError,
         message: "Option `repo` must be provided, pointing to your applications Ecto Repo."
     end
